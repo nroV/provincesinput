@@ -6,6 +6,7 @@ export default function DropDown({ title, data, onSelect, value }) {
       onSelect(e.target.value);
     }
   }
+  console.log(value)
 
   return (
     <>
@@ -22,7 +23,7 @@ export default function DropDown({ title, data, onSelect, value }) {
 
         {data?.map((item, index) => (
           <option key={index} value={item.id}>
-            {item.name.latin} / {item.name.km}
+            {item.name.latin}  {item.name_km}
           </option>
         ))}
       </select>

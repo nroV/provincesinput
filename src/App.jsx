@@ -1,123 +1,127 @@
 import "./App.css";
 import Layout from "./components/Layout";
 import DropDown from "./components/DropDown";
-import jsonDistricts from "./data/districts.json";
-import jsonProvince from "./data/provinces.json";
-import jsonCommunes from "./data/communes.json";
-import jsonVillage from "./data/villages.json";
-import { useMemo, useState } from "react";
-
-const dataExtractor = (data) => {
-  const results = Object.keys(data).map((key) => {
-    return {
-      id: key,
-      name: data[key].name,
-    };
-  });
-  return results;
-};
-
+import { useEffect, useState } from "react";
+import {fetchCommunesRequest} from "./service/action/FetchCommunes"
+import {fetchProvinceRequest} from "./service/action/FetchProvince"
+import {fetchDistrictRequest} from "./service/action/FetchDistrict"
+import {fetchVillagesRequest} from "./service/action/FetchVillages"
+import { communesUrl, districtUrl, villagesUrl } from "./service/constants/ApiUrl";
 function App() {
-  const provinces = useMemo(() => dataExtractor(jsonProvince.provinces), []);
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [comummnes, setCommunes] = useState([]);
+  const [villages, setVillages] = useState([]);
 
-  const districts = useMemo(() => dataExtractor(jsonDistricts.districts), []);
-
-  const communes = useMemo(() => dataExtractor(jsonCommunes.communes), []);
-
-  const villages = useMemo(() => dataExtractor(jsonVillage.villages), []);
+  const [isloading, setLoading] = useState(false);
 
   const [selectedProvince, setSelectProvince] = useState("");
   const [selectedDistrict, setSelectDistrict] = useState(null);
   const [selectedCommunes, setSelectCommunes] = useState(null);
   const [selectedVillage, setSelectVillage] = useState(null);
 
-  const [listDistricts, setListDistricts] = useState([]);
-  const [listCommunes, setListCommunes] = useState([]);
-  const [listVillages, setListVillages] = useState([]);
+  // const [listDistricts, setListDistricts] = useState([]);
+  // const [listCommunes, setListCommunes] = useState([]);
+
 
   const clearAllData = () => {
+
+ 
     setSelectCommunes(null);
     setSelectDistrict(null);
     setSelectVillage(null);
     setSelectProvince(null);
-    setListDistricts([]);
-    setListCommunes([]);
-    setSelectProvince("");
-    setListVillages([]);
+    setDistricts([]);
+    setCommunes([]);
+    setProvinces([])
+    setVillages([])
+    selectedProvince("")
+
+   
   };
 
-  // const findname = (data, id) =>
-  //   data?.find((pro) => pro?.id.startsWith(id)).name.latin;
-
-
-
-  const displayProvince = useMemo(() => {
-    if (!selectedProvince) {
-      return;
+  const fetchVillage = async (id) => {
+    try {
+      const data = await fetchVillagesRequest(`${villagesUrl()}${id}`);
+      return data;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      console.log("done");
     }
-    // return findname(provinces, selectedProvince);
-    return provinces.find((province) =>
-      province?.id.startsWith(selectedProvince)
-    );
-  }, [selectedProvince]);
-
-  const displayDistrict = useMemo(() => {
-    if (!selectedDistrict) {
-      return;
+  };
+  const fetchDistrict = async (id) => {
+    try {
+      const data = await fetchDistrictRequest(`${districtUrl()}${id}`);
+      return data;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      console.log("done");
     }
+  };
 
-    return districts?.find((district) =>
-      district?.id.startsWith(selectedDistrict)
-    );
-
-    // return findname(districts, selectedDistrict);
-  }, [selectedDistrict]);
-
-  const displayCommune = useMemo(() => {
-    if (!selectedCommunes) {
-      return;
+  const fetchCommunes = async (id) => {
+    try {
+      const data = await fetchCommunesRequest(`${communesUrl()}${id}`);
+      return data;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      console.log("done");
     }
-    // return findname(communes, selectedCommunes);
+  };
 
-    return communes.find((pro) => pro?.id.startsWith(selectedCommunes))
-  }, [selectedCommunes]);
-
-  const displayVillage = useMemo(() => {
-    if (!selectedVillage) {
-      return;
-    }
-    // return findname(villages, selectedVillage);
-    return villages.find((pro) => pro?.id.startsWith(selectedVillage));
-  }, [selectedVillage]);
-
-  const onSelectProvince = (id) => {
+  const onSelectProvince = async (id) => {
     setSelectProvince(id);
-    setListDistricts([]);
-    setListCommunes([]);
-    setListVillages([]);
+    
+
+    setDistricts([]);
+    setCommunes([]);
+    setVillages([]);
+
     setSelectVillage("");
     setSelectCommunes("");
     setSelectDistrict("");
-    setListDistricts(
-      districts.filter((district) => district.id.startsWith(id))
-    );
+
+    const data = await fetchDistrict(id);
+    setDistricts(data); //refactor
   };
 
-  const onSelectDistrict = (id) => {
+  const onSelectDistrict = async (id) => {
     setSelectDistrict(id);
-    setListVillages([]);
+    // setListVillages([]);
+    setVillages([]);
     setSelectCommunes("");
     setSelectVillage("");
-    setListCommunes(communes.filter((commune) => commune.id.startsWith(id)));
+
+    const data = await fetchCommunes(id);
+    setCommunes(data);
   };
-  const onSelectCommunes = (id) => {
+  const onSelectCommunes = async (id) => {
     setSelectCommunes(id);
     setSelectVillage("");
-    setListVillages(villages.filter((village) => village.id.startsWith(id)));
+
+    const data = await fetchVillage(id);
+    setVillages(data);
   };
   const onSelectVillage = (id) => {
     setSelectVillage(id);
   };
+
+  const fetchprovince = async () => {
+    try {
+      const data = await fetchProvinceRequest()
+      setProvinces(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      console.log("done");
+    }
+  };
+  useEffect(() => {
+    fetchprovince();
+  }, [selectedProvince]);
 
   return (
     <>
@@ -125,6 +129,7 @@ function App() {
       <Layout>
         <DropDown
           title={"Province"}
+  
           onSelect={onSelectProvince}
           data={provinces}
           value={selectedProvince}
@@ -132,19 +137,19 @@ function App() {
         <DropDown
           title={"Districts"}
           onSelect={onSelectDistrict}
-          data={listDistricts}
+          data={districts}
           value={selectedDistrict}
         />
         <DropDown
           title={"Communes"}
           onSelect={onSelectCommunes}
-          data={listCommunes}
+          data={comummnes}
           value={selectedCommunes}
         />
         <DropDown
           title={"Villages"}
           onSelect={onSelectVillage}
-          data={listVillages}
+          data={villages}
           value={selectedVillage}
         />
 
@@ -156,7 +161,7 @@ function App() {
         >
           Reset
         </button>
-
+        {/* 
         <div>
           <h3>
             Province: <span>{displayProvince?.name?.km}</span>
@@ -164,7 +169,7 @@ function App() {
           <h3>Districts: {displayDistrict?.name?.km}</h3>
           <h3>Communes {displayCommune?.name?.km}</h3>
           <h3>Villages {displayVillage?.name?.km}</h3>
-        </div>
+        </div> */}
       </Layout>
     </>
   );
